@@ -3,14 +3,14 @@ var sockjs = require('sockjs');
 // http://truongtx.me/2014/06/07/simple-chat-application-using-sockjs/
 
 var echo = sockjs.createServer();
-echo.on('connection', (conn) => {
+echo.on('connection', function(conn) {
   console.log('connection made');
-  conn.on('data', (message) => {
+  conn.on('data', function(message) {
     console.log('data gotten')
     conn.write(message);
   });
   conn.write(JSON.stringify(dummyPostData));
-  conn.on('close', () => console.log('closed'));
+  conn.on('close', function() { console.log('closed')});
 });
 
 var server = http.createServer();
