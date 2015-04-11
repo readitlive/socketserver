@@ -1,23 +1,43 @@
-var http = require('http');
-var sockjs = require('sockjs');
-// http://truongtx.me/2014/06/07/simple-chat-application-using-sockjs/
+var express = require('express');
+var app = express();
 
+var db = require('./db/setup');
 
-var echo = sockjs.createServer();
-echo.on('connection', function(conn) {
-  console.log('connection made');
-  conn.on('data', function(message) {
-    console.log('data gotten');
-    conn.write(message);
+db.once('open', function() {
+  app.get('/', function(req, res) {
+    db.Users.findOne({username: 'CPelkey'}, function(err, user) {
+      console.log(user);
+    });
+    res.send('hi');
   });
-  conn.write(JSON.stringify(dummyPostData));
-  conn.on('close', function() { console.log('closed'); });
 });
 
-var server = http.createServer();
-echo.installHandlers(server, {prefix: '/ws'});
 
-server.listen(3080, 'localhost');
+//routes:
+// files
+
+// create event
+// get event
+// update event
+// delete event
+
+// post entry
+// put entry
+// delete entry
+
+// post comment
+// put comment
+// delete comment
+
+// login
+
+// logout
+
+// create account
+
+
+
+app.listen(3000);
 
 
 var dummyPostData = [
