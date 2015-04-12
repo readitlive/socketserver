@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 
 exports.eventsSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.Mixed,
   eventTitle: String,
   adminUsers: [ String ],
   eventIsLive: Boolean,
@@ -8,6 +9,7 @@ exports.eventsSchema = new mongoose.Schema({
 });
 
 exports.postsSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.Mixed,
   postText: String,
   author: String,
   eventId: String,
@@ -18,6 +20,7 @@ exports.postsSchema = new mongoose.Schema({
 });
 
 exports.commentsSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.Mixed,
   commentText: String,
   author: String,
   eventId: String,
@@ -25,6 +28,7 @@ exports.commentsSchema = new mongoose.Schema({
 });
 
 exports.usersSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.Mixed,
   username: String,
   services: {
     password: {bcrypt: String}

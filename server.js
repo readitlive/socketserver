@@ -1,22 +1,136 @@
 var express = require('express');
 var app = express();
+var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
 
 var db = require('./db/setup');
 
 db.once('open', function() {
-  app.get('/', function(req, res) {
+
+  app.use(bodyParser.json());
+
+  app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+    next();
+  });
+
+  app.use(express.static(__dirname + '/public'));
+
+  // app.get('/:filename', function(req, res, next) {
+  //   var filename = req.params.filename;
+  //   if (!filename) filename = 'index.html';
+  //
+  //   var options = {
+  //     root: __dirname + '/public/',
+  //     dotfiles: 'deny',
+  //     headers: {
+  //       'x-timestamp': Date.now(),
+  //       'x-sent': true
+  //     }
+  //   };
+  //
+  //   res.sendFile(filename, options, function(err) {
+  //     if (err) {
+  //       console.log(err);
+  //       res.status(err.status).end();
+  //     }
+  //   });
+  //
+  // });
+
+  app.get('/api/users', function(req, res) {
     db.Users.findOne({username: 'CPelkey'}, function(err, user) {
       console.log(user);
     });
     res.send('hi');
   });
+
+
+  /**
+   * Event routes
+   */
+  app.post('/api/event', function(req, res) {
+    var event = new db.Events({
+      _id: mongoose.Types.ObjectId(),
+      eventTitle: req.body.eventTitle,
+      eventIsLive: false,
+      time: Date.now()
+    });
+
+    event.save(function(err, event) {
+      if (err) console.log(err);
+      else {
+        res.send(event);
+      }
+    });
+  });
+
+  app.get('/api/event', function(req, res) {
+    db.Events.find(function(err, events) {
+      if (err) {
+        console.log(err);
+        res.status(400).end();
+      }
+      res.send(events);
+    });
+
+  });
+
+  app.get('/api/event/:eventId', function(req, res) {
+    db.Events.findById(req.params.eventId, function(err, event) {
+      if (err) {
+        console.log(err);
+        res.status(400).end();
+      }
+      res.send(event);
+    });
+
+  });
+
+  //TODO
+  app.put('/api/event/:eventId', function(req, res) {
+    db.Events.findById(req.params.eventId, function(err, event) {
+      if (err) {
+        console.log(err);
+        res.status(400).end();
+      }
+
+    });
+  });
+
+  app.delete('/api/event/:eventId', function(req, res) {
+
+  });
+
+  /**
+   * Entry routes
+   */
+   app.post('/api/event/:eventId', function(req, res) {
+
+   });
+
+   app.get('/api/event/:eventId/entry', function(req, res) {
+     db.Posts.find({eventId: req.params.eventId}, function(err, posts) {
+       if (err) {
+         console.log(err);
+         res.status(400).end();
+       }
+       res.send(posts);
+
+     });
+   });
+
+   app.delete('/api/entry/:eventId/entry/:entryId', function(req, res) {
+
+   });
 });
 
 
 //routes:
 // files
 
-// create event
+// create entry
 // get event
 // update event
 // delete event
