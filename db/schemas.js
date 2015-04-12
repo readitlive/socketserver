@@ -1,13 +1,5 @@
 var mongoose = require('mongoose');
 
-exports.eventsSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.Mixed,
-  eventTitle: String,
-  adminUsers: [ String ],
-  eventIsLive: Boolean,
-  time: Date
-});
-
 exports.postsSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.Mixed,
   postText: String,
@@ -17,6 +9,14 @@ exports.postsSchema = new mongoose.Schema({
   postIsComment: Boolean,
   avatarUrl: String,
   timeEU: String
+});
+
+exports.eventsSchema = new mongoose.Schema({
+  eventTitle: String,
+  adminUsers: [ String ],
+  eventIsLive: Boolean,
+  entries: [exports.postsSchema],
+  time: Date
 });
 
 exports.commentsSchema = new mongoose.Schema({

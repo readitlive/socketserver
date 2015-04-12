@@ -51,8 +51,8 @@ db.once('open', function() {
    * Event routes
    */
   app.post('/api/event', function(req, res) {
+    console.log(req.body)
     var event = new db.Events({
-      _id: mongoose.Types.ObjectId(),
       eventTitle: req.body.eventTitle,
       eventIsLive: false,
       time: Date.now()
@@ -61,6 +61,7 @@ db.once('open', function() {
     event.save(function(err, event) {
       if (err) console.log(err);
       else {
+
         res.send(event);
       }
     });
@@ -78,11 +79,13 @@ db.once('open', function() {
   });
 
   app.get('/api/event/:eventId', function(req, res) {
+    console.log(req.params.eventId);
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
         res.status(400).end();
       }
+      console.log(event);
       res.send(event);
     });
 
@@ -95,10 +98,10 @@ db.once('open', function() {
         console.log(err);
         res.status(400).end();
       }
-
     });
   });
 
+  //TODO
   app.delete('/api/event/:eventId', function(req, res) {
 
   });
@@ -106,24 +109,54 @@ db.once('open', function() {
   /**
    * Entry routes
    */
-   app.post('/api/event/:eventId', function(req, res) {
+
+  //TODO
+  app.post('/api/event/:eventId', function(req, res) {
+    db.Events.findById(req.params.eventId, function(err, event) {
+      if (err) {
+        console.log(err);
+        res.status(400).end();
+      }
+      var entry = req.body;
+      entry._id = mongoose.Types.ObjectId();
+      entry.time = Date.now();
+
+      event.entries.push(entry);
+      event.save(function(err) {
+        if (err) {
+          console.log(err);
+          res.status(400).end();
+        } else {
+          res.send(entry);
+        }
+      });
+    });
+
+
+    entry.save(function(err, event) {
+      if (err) console.log(err);
+      else {
+        res.send(event);
+      }
+    });
+  });
+
+  //TODO: First check if any entries are attached to the event itself
+  app.get('/api/event/:eventId/entry', function(req, res) {
+   db.Posts.find({eventId: req.params.eventId}, function(err, posts) {
+     if (err) {
+       console.log(err);
+       res.status(400).end();
+     }
+     res.send(posts);
 
    });
+  });
 
-   app.get('/api/event/:eventId/entry', function(req, res) {
-     db.Posts.find({eventId: req.params.eventId}, function(err, posts) {
-       if (err) {
-         console.log(err);
-         res.status(400).end();
-       }
-       res.send(posts);
+  //TODO:
+  app.delete('/api/entry/:eventId/entry/:entryId', function(req, res) {
 
-     });
-   });
-
-   app.delete('/api/entry/:eventId/entry/:entryId', function(req, res) {
-
-   });
+  });
 });
 
 
