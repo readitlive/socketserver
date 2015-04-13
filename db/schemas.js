@@ -16,7 +16,6 @@ exports.eventsSchema = new mongoose.Schema({
   createdBy: String,
   adminUsers: [ String ],
   eventIsLive: Boolean,
-  entries: [exports.postsSchema],
   time: Date
 });
 
