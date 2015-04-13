@@ -71,12 +71,6 @@ db.once('open', function() {
             if (err) {
               console.log(err);
             } else {
-              // R.forEach(function(oldPost) {
-              //   console.log('old eventId: ', oldPost.eventId);
-              //   console.log('new eventId: ', savedEvent.eventId);
-              //   oldPost.eventId = savedEvent._id;
-              //   oldPost.save();
-              // }, posts);
               console.log('found ', posts.length, ' posts for event: ', savedEvent.eventTitle);
               posts.forEach(function(oldPost) {
                 var newPost = new Posts({
@@ -96,14 +90,6 @@ db.once('open', function() {
             }
 
           });
-
-          // oldEvent.remove(function(err) {
-          //   if (err) {
-          //     console.log(err);
-          //   } else {
-          //     console.log('delete success: ', oldEvent.eventTitle);
-          //   }
-          // });
         }
       });
 

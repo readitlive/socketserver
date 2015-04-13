@@ -79,13 +79,11 @@ db.once('open', function() {
   });
 
   app.get('/api/event/:eventId', function(req, res) {
-    console.log(req.params.eventId);
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
         res.status(400).end();
       }
-      console.log(event);
       res.send(event);
     });
 
@@ -112,31 +110,15 @@ db.once('open', function() {
 
   //TODO
   app.post('/api/event/:eventId', function(req, res) {
-    db.Events.findById(req.params.eventId, function(err, event) {
+    console.log('req body: ', req.body);
+    var entry = new db.Posts(req.body);
+
+    entry.save(function(err) {
       if (err) {
         console.log(err);
         res.status(400).end();
-      }
-      var entry = req.body;
-      entry._id = mongoose.Types.ObjectId();
-      entry.time = Date.now();
-
-      event.entries.push(entry);
-      event.save(function(err) {
-        if (err) {
-          console.log(err);
-          res.status(400).end();
-        } else {
-          res.send(entry);
-        }
-      });
-    });
-
-
-    entry.save(function(err, event) {
-      if (err) console.log(err);
-      else {
-        res.send(event);
+      } else {
+        res.send(entry);
       }
     });
   });
