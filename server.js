@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+var R = require('ramda');
 
 var db = require('./db/setup');
 
@@ -73,7 +74,8 @@ db.once('open', function() {
         console.log(err);
         res.status(400).end();
       }
-      res.send(events);
+      var sorted = R.sortBy(R.prop('time'), events);
+      res.send(sorted);
     });
 
   });
@@ -130,7 +132,8 @@ db.once('open', function() {
        console.log(err);
        res.status(400).end();
      }
-     res.send(posts);
+     var sorted = R.sortBy(R.prop('time'), posts);
+     res.send(sorted);
 
    });
   });
