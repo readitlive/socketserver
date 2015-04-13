@@ -13,6 +13,7 @@ exports.postsSchema = new mongoose.Schema({
 
 exports.eventsSchema = new mongoose.Schema({
   eventTitle: String,
+  createdBy: String,
   adminUsers: [ String ],
   eventIsLive: Boolean,
   entries: [exports.postsSchema],
