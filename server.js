@@ -4,6 +4,8 @@ var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var R = require('ramda');
 
+var socket = require('./socketserver');
+
 var db = require('./db/setup');
 
 db.once('open', function() {
@@ -101,9 +103,18 @@ db.once('open', function() {
     });
   });
 
-  //TODO
   app.delete('/api/event/:eventId', function(req, res) {
+    console.log('deleting', req.params);
+    db.Events.findById(req.params.eventId, function(err) {
+      if (err) {
+        console.log(err);
+        res.status(500).end();
+      } else {
+        console.log('deleted ', req.params)
 
+        res.status(200).end();
+      }
+    })
   });
 
   /**
@@ -120,6 +131,10 @@ db.once('open', function() {
         console.log(err);
         res.status(400).end();
       } else {
+        socket.send('post', 'Entry', {
+          eventId: req.params.eventId,
+          entry: entry
+        });
         res.send(entry);
       }
     });
@@ -132,34 +147,29 @@ db.once('open', function() {
        console.log(err);
        res.status(400).end();
      }
-     var sorted = R.sortBy(R.prop('time'), posts);
-     res.send(sorted);
+     var sortedPosts = R.sortBy(R.prop('time'), posts);
+     res.send(sortedPosts);
 
    });
   });
 
   //TODO:
   app.delete('/api/entry/:eventId/entry/:entryId', function(req, res) {
-
+    db.Posts.findById(req.body.entryId, function(err) {
+      if (err) {
+        console.log(err);
+        res.status(500).end();
+      } else {
+        socket.send('delete', 'Entry', req.params)
+        res.status(200).end();
+      }
+    })
   });
+
+  //PUT
+  //socket.send...
+
 });
-
-
-//routes:
-// files
-
-// create entry
-// get event
-// update event
-// delete event
-
-// post entry
-// put entry
-// delete entry
-
-// post comment
-// put comment
-// delete comment
 
 // login
 
