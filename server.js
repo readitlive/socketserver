@@ -154,7 +154,7 @@ db.once('open', function() {
   });
 
   app.delete('/api/event/:eventId/entry/:entryId', function(req, res) {
-    db.Posts.remove({_id: req.body.entryId}, function(err) {
+    db.Posts.remove({_id: req.params.entryId}, function(err) {
       if (err) {
         console.log(err);
         res.status(500).end();
