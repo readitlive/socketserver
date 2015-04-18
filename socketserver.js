@@ -6,12 +6,8 @@ var connection;
 var echo = sockjs.createServer();
 echo.on('connection', function(conn) {
   connection = conn;
-  // console.log('connection made');
-  // conn.on('data', function(message) {
-  //   console.log('data gotten');
-  //   conn.write(message);
-  // });
-  // conn.write(JSON.stringify(dummyPostData));
+  // conn.on('data', message => {});
+   // conn.write(JSON.stringify(dummyPostData));
   connection.on('close', function() { console.log('closed'); });
 });
 
