@@ -132,7 +132,7 @@ db.once('open', function() {
         console.log(err);
         res.status(400).end();
       } else {
-        socket.send('post', 'Entry', {
+        socket.send('post', 'Entry', req.params.eventId, {
           eventId: req.params.eventId,
           entry: entry
         });
@@ -159,7 +159,7 @@ db.once('open', function() {
         console.log(err);
         res.status(500).end();
       } else {
-        socket.send('delete', 'Entry', req.params)
+        socket.send('delete', 'Entry', req.params.eventId, req.params)
         console.log('delete', 'Entry', req.params)
         res.status(200).end();
       }

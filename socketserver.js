@@ -6,13 +6,18 @@ var clients = {};
 
 var echo = sockjs.createServer();
 echo.on('connection', function(conn) {
-  clients[conn.id] = conn;
-  // conn.on('data', message => {});
-  // conn.write(JSON.stringify(dummyPostData));
   conn.on('close', function() {
     delete clients[conn.id];
     console.log('closed');
   });
+  conn.on('data', function(message) {
+    message = JSON.parse(message);
+    if (typeof message === 'object' && message.eventId) {
+      var eventId = message.eventId;
+      !clients[eventId] && (clients[eventId] = {});
+      clients[eventId][conn.id] = conn;
+    }
+  })
 });
 
 var server = http.createServer();
@@ -20,9 +25,8 @@ echo.installHandlers(server, {prefix: '/ws'});
 
 server.listen(3080, 'localhost');
 
-exports.send = function(method, type, data) {
+exports.send = function(method, type, eventId, data) {
   R.forEach(function(client) {
-    console.log(client)
     client.write(JSON.stringify({method: method, type: type, data: data}));
-  }, R.values(clients))
+  }, R.values(clients[eventId]))
 };
