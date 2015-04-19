@@ -122,7 +122,6 @@ db.once('open', function() {
    * Entry routes
    */
 
-  //TODO
   app.post('/api/event/:eventId', function(req, res) {
     console.log('req body: ', req.body);
     var entry = new db.Posts(req.body);
@@ -166,8 +165,29 @@ db.once('open', function() {
     })
   });
 
-  //PUT
-  //socket.send...
+  app.put('/api/event/:eventId/entry/:entryId', function(req, res) {
+    db.Posts.findById(req.params.entryId, function(err, entry) {
+      if (err) {
+        console.log(err);
+        res.status(500).end();
+      } else {
+        entry.postText = req.body.postText;
+        entry.save(function(err, newEntry) {
+          if (err) {
+            console.log(err);
+            res.status(500).end();
+          } else {
+            socket.send('put', 'Entry', req.params.eventId, {
+              entryId: req.params.entryId,
+              eventId: req.params.eventId,
+              entry: entry
+            });
+            res.send(entry);
+          }
+        })
+      }
+    })
+  })
 
 });
 

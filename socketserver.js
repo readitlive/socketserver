@@ -26,6 +26,7 @@ echo.installHandlers(server, {prefix: '/ws'});
 server.listen(3080, 'localhost');
 
 exports.send = function(method, type, eventId, data) {
+  console.log(method, type, eventId, data);
   R.forEach(function(client) {
     client.write(JSON.stringify({method: method, type: type, data: data}));
   }, R.values(clients[eventId]))
