@@ -21,7 +21,7 @@ db.once('open', function() {
   passport.use(new FacebookStrategy({
     clientID: FACEBOOK_APP_ID,
     clientSecret: FACEBOOK_APP_SECRET,
-    callbackURL: "http://readitlive.net/auth/facebook/callback"
+    callbackURL: "http://readitlive.net/api/auth/facebook/callback"
   }, function(accessToken, refreshToken, profile, done) {
     db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
       //TODO
@@ -38,7 +38,7 @@ db.once('open', function() {
 
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, auth-token');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS, DELETE');
     next();
   });
@@ -69,7 +69,7 @@ db.once('open', function() {
 
   // Auth routes
 
-  app.post('/auth/login', function(req, res) {
+  app.post('/api/auth/login', function(req, res) {
     db.Users.findOne({username: req.body.username}, function(err, user) {
       if (err) {
         console.log(err);
@@ -89,7 +89,7 @@ db.once('open', function() {
     });
   });
 
-  app.post('/auth/signup', function(req, res) {
+  app.post('/api/auth/signup', function(req, res) {
     if (!(req.body.username && req.body.password)) {
       return res.sendStatus(400, "username and password are required"); //not sure this is the right code
     }
@@ -116,8 +116,8 @@ db.once('open', function() {
     });
   });
 
-  app.get('/auth/facebook', passport.authenticate('facebook', { session: false }));
-  app.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), function(req, res) {
+  app.get('/api/auth/facebook', passport.authenticate('facebook', { session: false }));
+  app.get('/api/auth/facebook/callback', passport.authenticate('facebook', { session: false }), function(req, res) {
     // db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
     //   //TODO
     //   user.profile.avatarUrl = profile.photos;
