@@ -1,7 +1,7 @@
 //jwt middleware. Validates the token.
 
 var jwt = require('jwt-simple');
-var User = require('../db/setup').User;
+var db = require('../db/setup');
 var moment = require('moment');
 
 var SECRET = 'aVery814491904sevteajlfhp148fmz';
@@ -24,23 +24,26 @@ module.exports = {
   },
 
   checkToken: function(req, res, next) {
-    var token = req.headers['access-token'];
+    var token = req.headers['access-token'] || (req.body && req.body.access_token);
     if (token) {
       try {
         var decodedToken = jwt.decode(token, SECRET);
         if (decodedToken.exp <= Date.now()) {
           return res.end('login expired', 401);
         }
-        User.findOne({_id: decodedToken.iss }, function(err, user) {
+        db.Users.findById(decodedToken.iss, function(err, user) {
           req.user = user;
           return next();
         });
 
       } catch (err) {
-        return res.end(401);
+        console.log('err decoding token');
+
+        return res.sendStatus(401);
       }
     } else {
-      return res.end(401);
+      console.log('err no token');
+      return res.sendStatus(401);
     }
   }
 

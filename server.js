@@ -1,13 +1,12 @@
 var express = require('express');
 var app = express();
-var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var R = require('ramda');
 
 var socket = require('./socketserver');
 var db = require('./db/setup');
-var jwtAuth = require('./app/jwtAuth');
-var localAuth = require('./app/localAuth');
+var jwtAuth = require('./utils/jwtAuth');
+var localAuth = require('./utils/localAuth');
 
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
@@ -38,7 +37,7 @@ db.once('open', function() {
 
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, auth-token');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, access-token');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS, DELETE');
     next();
   });
@@ -58,16 +57,18 @@ db.once('open', function() {
   //     }
   //   };
   //
-  //   res.sendFile(filename, options, function(err) {
+  //   res.sendStatusFile(filename, options, function(err) {
   //     if (err) {
   //       console.log(err);
-  //       res.status(err.status).end();
+  //       res.sendStatus(err.status);
   //     }
   //   });
   //
   // });
 
-  // Auth routes
+  /**
+   * Auth routes
+   */
 
   app.post('/api/auth/login', function(req, res) {
     db.Users.findOne({username: req.body.username}, function(err, user) {
@@ -91,7 +92,7 @@ db.once('open', function() {
 
   app.post('/api/auth/signup', function(req, res) {
     if (!(req.body.username && req.body.password)) {
-      return res.sendStatus(400, "username and password are required"); //not sure this is the right code
+      return res.sendStatus(400);
     }
 
     var newUser = new db.Users({
@@ -112,7 +113,7 @@ db.once('open', function() {
         return res.sendStatus(500);
       }
       console.log('saved user: ', user)
-      return res.send(jwtAuth.encodeToken(newUser));
+      return res.json(jwtAuth.encodeToken(newUser));
     });
   });
 
@@ -125,25 +126,27 @@ db.once('open', function() {
     //   user.profile.email = profile.email;
     //   user.username = profile.email;
     //   user.save();
-    //   res.send(jwtAuth.encodeToken(user));
+    //   res.json(jwtAuth.encodeToken(user));
     // });
   });
+
   /**
    * Event routes
    */
   app.post('/api/event', jwtAuth.checkToken, function(req, res) {
-    console.log(req.body)
+    console.log(req.body);
     var event = new db.Events({
       eventTitle: req.body.eventTitle,
       eventIsLive: false,
+      createdBy: req.user.username,
+      adminUsers: [req.user.username],
       time: Date.now()
     });
 
     event.save(function(err, event) {
       if (err) console.log(err);
       else {
-
-        res.send(event);
+        res.json(event);
       }
     });
   });
@@ -152,10 +155,10 @@ db.once('open', function() {
     db.Events.find(function(err, events) {
       if (err) {
         console.log(err);
-        res.status(400).end();
+        res.sendStatus(400);
       }
       var sorted = R.sortBy(R.prop('time'), events);
-      res.send(sorted);
+      res.json(sorted);
     });
 
   });
@@ -164,33 +167,41 @@ db.once('open', function() {
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
-        res.status(400).end();
+        res.sendStatus(400);
       }
-      res.send(event);
+      res.json(event);
     });
 
   });
 
-  //TODO
-  app.put('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
+  app.put('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
-        res.status(400).end();
+        res.sendStatus(400);
       }
+      event.eventTitle = req.body.eventTitle;
+      event.eventIsLive = req.body.eventIsLive;
+      event.adminUsers = req.body.adminUsers;
+      // TODO validate users against db
+
+      event.save(function(err, event) {
+        if (err) res.sendStatus(500);
+        else res.json(event);
+      })
     });
   });
 
-  app.delete('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
+  app.delete('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     console.log('deleting', req.params);
     db.Events.findById(req.params.eventId, function(err) {
       if (err) {
         console.log(err);
-        res.status(500).end();
+        res.sendStatus(500);
       } else {
         console.log('deleted ', req.params)
 
-        res.status(200).end();
+        res.sendStatus(200);
       }
     })
   });
@@ -199,20 +210,20 @@ db.once('open', function() {
    * Entry routes
    */
 
-  app.post('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
+  app.post('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     console.log('req body: ', req.body);
     var entry = new db.Posts(req.body);
 
     entry.save(function(err) {
       if (err) {
         console.log(err);
-        res.status(400).end();
+        res.sendStatus(400);
       } else {
         socket.send('post', 'Entry', req.params.eventId, {
           eventId: req.params.eventId,
           entry: entry
         });
-        res.send(entry);
+        res.json(entry);
       }
     });
   });
@@ -221,45 +232,45 @@ db.once('open', function() {
    db.Posts.find({eventId: req.params.eventId}, function(err, posts) {
      if (err) {
        console.log(err);
-       res.status(400).end();
+       res.sendStatus(400);
      }
      var sortedPosts = R.sortBy(R.prop('time'), posts);
-     res.send(sortedPosts);
+     res.json(sortedPosts);
 
    });
   });
 
-  app.delete('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, function(req, res) {
+  app.delete('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     db.Posts.remove({_id: req.params.entryId}, function(err) {
       if (err) {
         console.log(err);
-        res.status(500).end();
+        res.sendStatus(500);
       } else {
         socket.send('delete', 'Entry', req.params.eventId, req.params)
         console.log('delete', 'Entry', req.params)
-        res.status(200).end();
+        res.sendStatus(200);
       }
     })
   });
 
-  app.put('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, function(req, res) {
+  app.put('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     db.Posts.findById(req.params.entryId, function(err, entry) {
       if (err) {
         console.log(err);
-        res.status(500).end();
+        res.sendStatus(500);
       } else {
         entry.postText = req.body.postText;
         entry.save(function(err, newEntry) {
           if (err) {
             console.log(err);
-            res.status(500).end();
+            res.sendStatus(500);
           } else {
             socket.send('put', 'Entry', req.params.eventId, {
               entryId: req.params.entryId,
               eventId: req.params.eventId,
               entry: entry
             });
-            res.send(entry);
+            res.json(entry);
           }
         })
       }

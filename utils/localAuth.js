@@ -1,7 +1,7 @@
 var R = require('ramda');
+var db = require('../db/setup');
 var bcrypt = require('bcrypt');
 var sha256 = require('sha256');
-var db = require('./db/setup');
 
 var _bcryptRounds = 10;
 
@@ -14,16 +14,21 @@ exports.validatePassword = function(user, password) {
 };
 
 exports.checkAdmin = function(req, res, next) {
+  console.log('checking admin')
+
   db.Events.findById(req.params.eventId, function(err, event) {
     if (err) {
       console.log(err);
-      res.sendStatus(401).end();
+      res.sendStatus(400);
     }
-    if (R.indexOf(req.user.username, event.adminUsers)) { //user is in admins list
-      next()
+
+    console.log('user ', req.user.username);
+    console.log('admins ', req.user.username);
+    var index = R.indexOf(req.user.username, event.adminUsers);
+    if (index >= 0) {
+      next();
     } else {
-      res.sendStatus(404);
+      res.sendStatus(401);
     }
   });
-
 };

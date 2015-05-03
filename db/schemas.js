@@ -14,9 +14,9 @@ exports.postsSchema.index({eventId: 1});
 
 exports.eventsSchema = new mongoose.Schema({
   eventTitle: String,
+  eventIsLive: Boolean,
   createdBy: String,
   adminUsers: [ String ],
-  eventIsLive: Boolean,
   time: Date
 });
 
