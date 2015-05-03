@@ -8,6 +8,8 @@ var socket = require('./socketserver');
 
 var db = require('./db/setup');
 
+var jwtAuth = require('./app/jwtAuth');
+
 db.once('open', function() {
 
   app.use(bodyParser.json());
@@ -43,18 +45,50 @@ db.once('open', function() {
   //
   // });
 
-  app.get('/api/users', function(req, res) {
-    db.Users.findOne({username: 'CPelkey'}, function(err, user) {
-      console.log(user);
+  // Auth routes
+
+  app.get('/users/login', function(req, res) {
+    db.Users.findOne({username: req.body.username}, function(err, user) {
+      if (err) {
+        console.log(err);
+        return res.send(401);
+      } else if (!user) {
+        console.log('no user found:', req.body);
+        return res.send(401);
+      }
+
+      if (!localAuth.validatePassword(user, req.body.password)) {
+        return res.send(401);
+      } else {
+        return res.json(jwtAuth.encodeToken(user));
+      }
     });
-    res.send('hi');
   });
 
+  app.post('/users/signup', function(req, res) {
+    if (!(req.body.username && req.body.password && req.body.email)) {
+      return res.send(400, "username, password and email are required"); //not sure this is the right code
+    }
+
+    var newUser = new User({
+      username: req.body.username,
+      passwordHash: localAuth.genHash(req.body.password),
+      profile: {
+        email: req.body.email,
+        name: req.body.name,
+      }
+  });
+
+  newUser.save();
+
+  res.send(jwtAuth.encodeToken(newUser));
+
+});
 
   /**
    * Event routes
    */
-  app.post('/api/event', function(req, res) {
+  app.post('/api/event', jwtAuth.decodeToken, function(req, res) {
     console.log(req.body)
     var event = new db.Events({
       eventTitle: req.body.eventTitle,
@@ -95,7 +129,7 @@ db.once('open', function() {
   });
 
   //TODO
-  app.put('/api/event/:eventId', function(req, res) {
+  app.put('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
@@ -104,7 +138,7 @@ db.once('open', function() {
     });
   });
 
-  app.delete('/api/event/:eventId', function(req, res) {
+  app.delete('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
     console.log('deleting', req.params);
     db.Events.findById(req.params.eventId, function(err) {
       if (err) {
@@ -122,7 +156,7 @@ db.once('open', function() {
    * Entry routes
    */
 
-  app.post('/api/event/:eventId', function(req, res) {
+  app.post('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
     console.log('req body: ', req.body);
     var entry = new db.Posts(req.body);
 
@@ -152,7 +186,7 @@ db.once('open', function() {
    });
   });
 
-  app.delete('/api/event/:eventId/entry/:entryId', function(req, res) {
+  app.delete('/api/event/:eventId/entry/:entryId', jwtAuth.decodeToken, function(req, res) {
     db.Posts.remove({_id: req.params.entryId}, function(err) {
       if (err) {
         console.log(err);
@@ -165,7 +199,7 @@ db.once('open', function() {
     })
   });
 
-  app.put('/api/event/:eventId/entry/:entryId', function(req, res) {
+  app.put('/api/event/:eventId/entry/:entryId', jwtAuth.decodeToken, function(req, res) {
     db.Posts.findById(req.params.entryId, function(err, entry) {
       if (err) {
         console.log(err);

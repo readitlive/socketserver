@@ -38,14 +38,16 @@ exports.usersSchema = new mongoose.Schema({
   avatarUrl: String
 });
 
-// Events = new Meteor.Collection('events');
-//   // eventTitle: eventTitle,
-//   // adminUsers: [ user.username, ]
-//   // eventIsLive: false,
-//   // time: Date.now()
-//
-//
-//
+exports.usersSchema.v2 = new mongoose.Schema({
+  username: String,
+  passwordHash: String,
+  profile: {
+    name: String,
+    avatarUrl: String,
+    email: String
+  }
+});
+
 // Posts = new Meteor.Collection('posts');
 //
 //   // postText: postText,
