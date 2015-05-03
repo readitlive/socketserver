@@ -9,7 +9,7 @@ var SECRET = 'aVery814491904sevteajlfhp148fmz';
 module.exports = {
 
   encodeToken: function(user) {
-    var expiration = moment().add('days', 14).valueOf();
+    var expiration = moment().add(14, 'days').valueOf();
     var token = jwt.encode({
         iss: user._id,
         exp: expiration
@@ -23,7 +23,7 @@ module.exports = {
 
   },
 
-  decodeToken: function(req, res, next) {
+  checkToken: function(req, res, next) {
     var token = req.headers['access-token'] || (req.body && req.body.access_token);
     if (token) {
       try {

@@ -29,16 +29,7 @@ exports.commentsSchema = new mongoose.Schema({
 });
 
 exports.usersSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.Mixed,
-  username: String,
-  services: {
-    password: {bcrypt: String}
-  },
-  profile: {name: String},
-  avatarUrl: String
-});
-
-exports.usersSchema.v2 = new mongoose.Schema({
+  facebookId: String,
   username: String,
   passwordHash: String,
   profile: {
@@ -48,29 +39,13 @@ exports.usersSchema.v2 = new mongoose.Schema({
   }
 });
 
-// Posts = new Meteor.Collection('posts');
-//
-//   // postText: postText,
-//   // author: user.username,
-//   // eventId: this._id,
-//   // time: Date.now()
-//   // postIsComment: BOOL
-//   // avatarUrl: url
-//   // timeEU: timeEUString
-//
-//
-//
 // Comments = new Meteor.Collection('comments');
 //
 //   // commentText: commentText,
 //   // author: "commentator"
 //   // eventId: this._id,
 //   // time: Date.now()
-//
-//
-// //Users
-//   // avatarUrl: s3
-//
+
 // Presences = new Meteor.Collection('presences');
 // // For backwards compatibilty
 // Meteor.presences = Presences;

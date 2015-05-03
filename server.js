@@ -5,14 +5,36 @@ var bodyParser = require('body-parser');
 var R = require('ramda');
 
 var socket = require('./socketserver');
-
 var db = require('./db/setup');
-
 var jwtAuth = require('./app/jwtAuth');
+var localAuth = require('./app/localAuth');
+
+var passport = require('passport');
+var FacebookStrategy = require('passport-facebook').Strategy;
+
+var FACEBOOK_APP_ID = '622124904540951';
+var FACEBOOK_APP_SECRET = '78cc7b4d79f684d624873471d04e1df6';
 
 db.once('open', function() {
 
   app.use(bodyParser.json());
+  passport.use(new FacebookStrategy({
+    clientID: FACEBOOK_APP_ID,
+    clientSecret: FACEBOOK_APP_SECRET,
+    callbackURL: "http://readitlive.net/auth/facebook/callback"
+  }, function(accessToken, refreshToken, profile, done) {
+    db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
+      //TODO
+      user.profile.avatarUrl = profile.photos;
+      user.profile.name = profile.name;
+      user.profile.email = profile.email;
+      user.username = profile.email;
+      user.save(function(err, user) {
+        done();
+      });
+    });
+
+  }));
 
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -47,48 +69,69 @@ db.once('open', function() {
 
   // Auth routes
 
-  app.get('/users/login', function(req, res) {
+  app.post('/auth/login', function(req, res) {
     db.Users.findOne({username: req.body.username}, function(err, user) {
       if (err) {
         console.log(err);
-        return res.send(401);
+        console.log('error locating user:', req.body);
+        return res.sendStatus(401);
       } else if (!user) {
         console.log('no user found:', req.body);
-        return res.send(401);
+        return res.sendStatus(401);
       }
 
       if (!localAuth.validatePassword(user, req.body.password)) {
-        return res.send(401);
+        console.log('credentials invalid:', req.body);
+        return res.sendStatus(401);
       } else {
         return res.json(jwtAuth.encodeToken(user));
       }
     });
   });
 
-  app.post('/users/signup', function(req, res) {
-    if (!(req.body.username && req.body.password && req.body.email)) {
-      return res.send(400, "username, password and email are required"); //not sure this is the right code
+  app.post('/auth/signup', function(req, res) {
+    if (!(req.body.username && req.body.password)) {
+      return res.sendStatus(400, "username and password are required"); //not sure this is the right code
     }
 
-    var newUser = new User({
+    var newUser = new db.Users({
       username: req.body.username,
       passwordHash: localAuth.genHash(req.body.password),
       profile: {
         email: req.body.email,
         name: req.body.name,
       }
+    });
+
+    newUser.save(function(err, user) {
+      if (err) {
+        console.log('err saving user: ', req.body);
+        return res.sendStatus(500);
+      } else if (!user) {
+        console.log('err no user: ', req.body);
+        return res.sendStatus(500);
+      }
+      console.log('saved user: ', user)
+      return res.send(jwtAuth.encodeToken(newUser));
+    });
   });
 
-  newUser.save();
-
-  res.send(jwtAuth.encodeToken(newUser));
-
-});
-
+  app.get('/auth/facebook', passport.authenticate('facebook', { session: false }));
+  app.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), function(req, res) {
+    // db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
+    //   //TODO
+    //   user.profile.avatarUrl = profile.photos;
+    //   user.profile.name = profile.name;
+    //   user.profile.email = profile.email;
+    //   user.username = profile.email;
+    //   user.save();
+    //   res.send(jwtAuth.encodeToken(user));
+    // });
+  });
   /**
    * Event routes
    */
-  app.post('/api/event', jwtAuth.decodeToken, function(req, res) {
+  app.post('/api/event', jwtAuth.checkToken, function(req, res) {
     console.log(req.body)
     var event = new db.Events({
       eventTitle: req.body.eventTitle,
@@ -129,7 +172,7 @@ db.once('open', function() {
   });
 
   //TODO
-  app.put('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
+  app.put('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
     db.Events.findById(req.params.eventId, function(err, event) {
       if (err) {
         console.log(err);
@@ -138,7 +181,7 @@ db.once('open', function() {
     });
   });
 
-  app.delete('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
+  app.delete('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
     console.log('deleting', req.params);
     db.Events.findById(req.params.eventId, function(err) {
       if (err) {
@@ -156,7 +199,7 @@ db.once('open', function() {
    * Entry routes
    */
 
-  app.post('/api/event/:eventId', jwtAuth.decodeToken, function(req, res) {
+  app.post('/api/event/:eventId', jwtAuth.checkToken, function(req, res) {
     console.log('req body: ', req.body);
     var entry = new db.Posts(req.body);
 
@@ -186,7 +229,7 @@ db.once('open', function() {
    });
   });
 
-  app.delete('/api/event/:eventId/entry/:entryId', jwtAuth.decodeToken, function(req, res) {
+  app.delete('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, function(req, res) {
     db.Posts.remove({_id: req.params.entryId}, function(err) {
       if (err) {
         console.log(err);
@@ -199,7 +242,7 @@ db.once('open', function() {
     })
   });
 
-  app.put('/api/event/:eventId/entry/:entryId', jwtAuth.decodeToken, function(req, res) {
+  app.put('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, function(req, res) {
     db.Posts.findById(req.params.entryId, function(err, entry) {
       if (err) {
         console.log(err);
@@ -224,13 +267,5 @@ db.once('open', function() {
   })
 
 });
-
-// login
-
-// logout
-
-// create account
-
-
 
 app.listen(3000);
