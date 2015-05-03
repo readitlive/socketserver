@@ -42,6 +42,7 @@ var updateViewerCount = function(eventId) {
 exports.send = function(method, type, eventId, data) {
   console.log(method, type, eventId, data);
   R.forEach(function(client) {
+    //TODO: send some things only to admins
     client.write(JSON.stringify({method: method, type: type, data: data}));
   }, R.values(_clients[eventId]))
 };

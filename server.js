@@ -112,7 +112,7 @@ db.once('open', function() {
         console.log('err no user: ', req.body);
         return res.sendStatus(500);
       }
-      console.log('saved user: ', user)
+      console.log('saved user: ', user);
       return res.json(jwtAuth.encodeToken(newUser));
     });
   });
@@ -160,7 +160,6 @@ db.once('open', function() {
       var sorted = R.sortBy(R.prop('time'), events);
       res.json(sorted);
     });
-
   });
 
   app.get('/api/event/:eventId', function(req, res) {
@@ -171,7 +170,6 @@ db.once('open', function() {
       }
       res.json(event);
     });
-
   });
 
   app.put('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
@@ -188,7 +186,7 @@ db.once('open', function() {
       event.save(function(err, event) {
         if (err) res.sendStatus(500);
         else res.json(event);
-      })
+      });
     });
   });
 
@@ -199,11 +197,10 @@ db.once('open', function() {
         console.log(err);
         res.sendStatus(500);
       } else {
-        console.log('deleted ', req.params)
-
+        console.log('deleted ', req.params);
         res.sendStatus(200);
       }
-    })
+    });
   });
 
   /**
@@ -211,9 +208,7 @@ db.once('open', function() {
    */
 
   app.post('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
-    console.log('req body: ', req.body);
     var entry = new db.Posts(req.body);
-
     entry.save(function(err) {
       if (err) {
         console.log(err);
@@ -229,13 +224,13 @@ db.once('open', function() {
   });
 
   app.get('/api/event/:eventId/entry', function(req, res) {
-   db.Posts.find({eventId: req.params.eventId}, function(err, posts) {
+   db.Posts.find({eventId: req.params.eventId}, function(err, entries) {
      if (err) {
        console.log(err);
        res.sendStatus(400);
      }
-     var sortedPosts = R.sortBy(R.prop('time'), posts);
-     res.json(sortedPosts);
+     var sortedEntries = R.sortBy(R.prop('time'), entries);
+     res.json(sortedEntries);
 
    });
   });
@@ -246,11 +241,11 @@ db.once('open', function() {
         console.log(err);
         res.sendStatus(500);
       } else {
-        socket.send('delete', 'Entry', req.params.eventId, req.params)
-        console.log('delete', 'Entry', req.params)
+        socket.send('delete', 'Entry', req.params.eventId, req.params);
+        console.log('delete', 'Entry', req.params);
         res.sendStatus(200);
       }
-    })
+    });
   });
 
   app.put('/api/event/:eventId/entry/:entryId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
@@ -272,10 +267,58 @@ db.once('open', function() {
             });
             res.json(entry);
           }
-        })
+        });
       }
-    })
-  })
+    });
+  });
+
+  /**
+   * Comment routes
+   */
+
+  app.post('/api/event/:eventId/comment', jwtAuth.checkToken, function(req, res) {
+    var comment = new db.Comments(req.body);
+    comment.save(function(err) {
+      if (err) {
+        console.log(err);
+        res.sendStatus(400);
+      } else {
+        socket.send('post', 'Comment', req.params.eventId, {
+          eventId: req.params.eventId,
+          comment: comment
+        });
+        res.json(comment);
+      }
+    });
+  });
+
+  app.get('/api/event/:eventId/comment', jwtAuth.checkToken, localAuth.checkAdmin,  function(req, res) {
+   db.Comments.find({eventId: req.params.eventId}, function(err, comments) {
+     if (err) {
+       console.log(err);
+       res.sendStatus(400);
+     }
+     var sortedComments = R.sortBy(R.prop('time'), comments);
+     res.json(sortedComments);
+   });
+  });
+
+  app.delete('/api/event/:eventId/comment/:commentId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
+    db.Comments.remove({_id: req.params.commentId}, function(err) {
+      if (err) {
+        console.log(err);
+        res.sendStatus(500);
+      } else {
+        socket.send('delete', 'Comment', req.params.eventId, req.params);
+        console.log('delete', 'Comment', req.params);
+        res.sendStatus(200);
+      }
+    });
+  });
+
+  app.put('/api/event/:eventId/entry/:commentId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
+    //TODO
+  });
 
 });
 

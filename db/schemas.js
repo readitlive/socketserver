@@ -21,12 +21,14 @@ exports.eventsSchema = new mongoose.Schema({
 });
 
 exports.commentsSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.Mixed,
-  commentText: String,
+  postText: String,
   author: String,
   eventId: String,
-  time: Date
+  time: Date,
+  avatarUrl: String,
+  timeEU: String
 });
+exports.commentsSchema.index({eventId: 1});
 
 exports.usersSchema = new mongoose.Schema({
   facebookId: String,

@@ -8,7 +8,7 @@ db.on('error', console.error);
 db.once('open', function() {
   db.Events = mongoose.model('Events.v2', schemas.eventsSchema);
   db.Posts = mongoose.model('Posts.v2', schemas.postsSchema);
-  db.Comments = mongoose.model('Comments', schemas.commentsSchema);
+  db.Comments = mongoose.model('Comments.v2', schemas.commentsSchema);
   db.Users = mongoose.model('Users.v2', schemas.usersSchema);
 });
 
