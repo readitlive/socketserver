@@ -228,10 +228,12 @@ db.once('open', function() {
      if (err) {
        console.log(err);
        res.sendStatus(400);
+     } else if (entries) {
+       var sortedEntries = R.sortBy(R.prop('time'), entries);
+       res.json(sortedEntries);
+     } else {
+       res.json({});
      }
-     var sortedEntries = R.sortBy(R.prop('time'), entries);
-     res.json(sortedEntries);
-
    });
   });
 
