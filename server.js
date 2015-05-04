@@ -184,8 +184,12 @@ db.once('open', function() {
       // TODO validate users against db
 
       event.save(function(err, event) {
-        if (err) res.sendStatus(500);
-        else res.json(event);
+        if (err) return res.sendStatus(500);
+        socket.send('put', 'Event', req.params.eventId, {
+          eventId: req.params.eventId,
+          event: event
+        });
+        return res.json(event);
       });
     });
   });
