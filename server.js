@@ -260,7 +260,9 @@ db.once('open', function() {
         console.log(err);
         res.sendStatus(500);
       } else {
+        console.log('rq body', req.body)
         entry.postText = req.body.postText;
+        entry.replies = req.body.replies;
         entry.save(function(err, newEntry) {
           if (err) {
             console.log(err);
@@ -271,7 +273,7 @@ db.once('open', function() {
               eventId: req.params.eventId,
               entry: entry
             });
-            res.json(entry);
+            res.json(newEntry);
           }
         });
       }

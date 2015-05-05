@@ -7,7 +7,8 @@ exports.postsSchema = new mongoose.Schema({
   time: Date,
   postIsComment: Boolean,
   avatarUrl: String,
-  timeEU: String
+  timeEU: String,
+  replies: []
 });
 
 exports.postsSchema.index({eventId: 1});
