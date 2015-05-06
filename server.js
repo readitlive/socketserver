@@ -7,19 +7,19 @@ var socket = require('./socketserver');
 var db = require('./db/setup');
 var jwtAuth = require('./utils/jwtAuth');
 var localAuth = require('./utils/localAuth');
+var S3Sign = require('./utils/S3Sign');
 
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 
-var FACEBOOK_APP_ID = '622124904540951';
-var FACEBOOK_APP_SECRET = '78cc7b4d79f684d624873471d04e1df6';
+var secrets = require('./secrets');
 
 db.once('open', function() {
 
   app.use(bodyParser.json());
   passport.use(new FacebookStrategy({
-    clientID: FACEBOOK_APP_ID,
-    clientSecret: FACEBOOK_APP_SECRET,
+    clientID: secrets.FACEBOOK_APP_ID,
+    clientSecret: secrets.FACEBOOK_APP_SECRET,
     callbackURL: "http://readitlive.net/api/auth/facebook/callback"
   }, function(accessToken, refreshToken, profile, done) {
     db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
@@ -328,6 +328,11 @@ db.once('open', function() {
     //TODO
   });
 
+  /**
+   * S3 Image Upload
+   */
+
+  app.get('/api/sign', jwtAuth.checkToken, S3Sign.sign);
 });
 
 app.listen(3000);

@@ -14,7 +14,6 @@ exports.validatePassword = function(user, password) {
 };
 
 exports.checkAdmin = function(req, res, next) {
-  console.log('checking admin')
 
   db.Events.findById(req.params.eventId, function(err, event) {
     if (err) {
