@@ -11,7 +11,7 @@ aws.config.update({
 exports.sign = function(req, res) {
   var filename = uuid.v4() + "_" + req.body.filename;
   var mimeType = mime.lookup(filename);
-  var fileKey = req + '/' + filename;
+  var fileKey = filename;
 
   var s3 = new aws.S3();
   var params = {
@@ -26,10 +26,14 @@ exports.sign = function(req, res) {
       console.log(err);
       return res.send(500, "Cannot create S3 signed URL");
     }
+    data = data.replace('https://liveblogphotos2.s3.amazonaws.com', 'https://liveblogphotos2.s3-us-west-2.amazonaws.com');
     res.json({
       signedUrl: data,
-      publicUrl: '/s3/img/' + filename,
+      publicUrl: filename,
       filename: filename
     });
   });
 };
+
+
+// partially from : https://github.com/odysseyscience/react-s3-uploader
