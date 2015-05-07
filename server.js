@@ -332,7 +332,7 @@ db.once('open', function() {
    * S3 Image Upload
    */
 
-  app.get('/api/sign', jwtAuth.checkToken, S3Sign.sign);
+  app.post('/api/sign', jwtAuth.checkToken, S3Sign.sign);
 });
 
 app.listen(3000);

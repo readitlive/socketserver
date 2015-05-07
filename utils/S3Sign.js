@@ -9,7 +9,7 @@ aws.config.update({
 });
 
 exports.sign = function(req, res) {
-  var filename = uuid.v4() + "_" + req.query.objectName;
+  var filename = uuid.v4() + "_" + req.body.filename;
   var mimeType = mime.lookup(filename);
   var fileKey = req + '/' + filename;
 
