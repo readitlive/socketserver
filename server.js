@@ -90,6 +90,30 @@ db.once('open', function() {
     });
   });
 
+  app.put('/api/auth/user', jwtAuth.checkToken, function(req, res) {
+    if (req.user.username !== req.body.username) return res.sendStatus(403);
+    db.Users.findOne({username: req.body.username}, function(err, user) {
+      if (err) {
+        console.log(err);
+        console.log('error locating user:', req.body);
+        return res.sendStatus(401);
+      } else if (!user) {
+        console.log('no user found:', req.body);
+        return res.sendStatus(401);
+      }
+      user.profile.avatarUrl = req.body.profile.avatarUrl;
+      user.save(function(err, newUser) {
+        if (err) {
+          console.log(err);
+          return res.sendStatus(500);
+        } else {
+          delete newUser.passwordHash;
+          res.json(newUser);
+        }
+      });
+    });
+  });
+
   app.post('/api/auth/signup', function(req, res) {
     if (!(req.body.username && req.body.password)) {
       return res.sendStatus(400);

@@ -14,7 +14,7 @@ module.exports = {
         iss: user._id,
         exp: expiration
       }, SECRET);
-
+    delete user.passwordHash;
     return {
       token: token,
       expires: expiration,
