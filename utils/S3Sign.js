@@ -2,10 +2,13 @@ var uuid = require('node-uuid');
 var aws = require('aws-sdk');
 var mime = require('mime');
 
-var secrets = require('../secrets.js');
+var AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+var AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+var S3BUCKET_NAME = process.env.S3BUCKET_NAME;
+
 aws.config.update({
-  accessKeyId: secrets.AWS_ACCESS_KEY_ID,
-  secretAccessKey: secrets.AWS_SECRET_ACCESS_KEY
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY
 });
 
 exports.sign = function(req, res) {
@@ -15,7 +18,7 @@ exports.sign = function(req, res) {
 
   var s3 = new aws.S3();
   var params = {
-    Bucket: secrets.S3BUCKET_NAME,
+    Bucket: S3BUCKET_NAME,
     Key: fileKey,
     Expires: 60,
     ContentType: mimeType,

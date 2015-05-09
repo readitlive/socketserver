@@ -12,14 +12,15 @@ var S3Sign = require('./utils/S3Sign');
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 
-var secrets = require('./secrets');
+var FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
 db.once('open', function() {
 
   app.use(bodyParser.json());
   passport.use(new FacebookStrategy({
-    clientID: secrets.FACEBOOK_APP_ID,
-    clientSecret: secrets.FACEBOOK_APP_SECRET,
+    clientID: FACEBOOK_APP_ID,
+    clientSecret: FACEBOOK_APP_SECRET,
     callbackURL: "http://readitlive.net/api/auth/facebook/callback"
   }, function(accessToken, refreshToken, profile, done) {
     db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {

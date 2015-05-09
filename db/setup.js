@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
 var schemas = require('./schemas');
-mongoose.connect('mongodb://readitlive:HR14Rules@proximus.modulusmongo.net:27017/Y8jyguwu');
+var MONGO_URL = process.env.MONGO_URL;
+
+mongoose.connect(MONGO_URL);
 var db = mongoose.connection;
 
 db.on('error', console.error);
