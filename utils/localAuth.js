@@ -20,6 +20,9 @@ exports.checkAdmin = function(req, res, next) {
       console.log(err);
       res.sendStatus(400);
     }
+    if (!event) {
+      return res.sendStatus(404);
+    }
     var index = R.indexOf(req.user.username, event.adminUsers);
     if (index >= 0) {
       next();
