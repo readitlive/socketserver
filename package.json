@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "scp * root@104.236.225.58:/www && scp db/ root@104.236.225.58:/www/db && scp app/ root@104.236.225.58:/www/app && scp utils/ root@104.236.225.58:/www/utils"
+    "deploy": "scp -r package.json server.js socketserver.js app db utils root@104.236.225.58:/www && ssh root@104.236.225.58 'sudo service ril restart'"
   },
   "author": "",
   "license": "ISC",

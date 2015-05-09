@@ -12,10 +12,10 @@ var localAuth = require('./utils/localAuth');
 var S3Sign = require('./utils/S3Sign');
 
 var passport = require('passport');
-var FacebookStrategy = require('passport-facebook').Strategy;
-
-var FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
-var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+// var FacebookStrategy = require('passport-facebook').Strategy;
+//
+// var FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+// var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
 db.once('open', function() {
 
@@ -146,7 +146,7 @@ db.once('open', function() {
       eventTitle: req.body.eventTitle,
       eventIsLive: false,
       createdBy: req.user.username,
-      adminUsers: [req.user.username],
+      adminUsers: [req.user.username, 'CPelkey', 'maddog', 'rg'],
       time: Date.now()
     });
 
@@ -202,8 +202,7 @@ db.once('open', function() {
   });
 
   app.delete('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
-    console.log('deleting', req.params);
-    db.Events.findById(req.params.eventId, function(err) {
+    db.Events.findOneAndRemove(req.params.eventId, function(err) {
       if (err) {
         console.log(err);
         res.sendStatus(500);
@@ -340,6 +339,14 @@ db.once('open', function() {
    */
 
   app.post('/api/sign', jwtAuth.checkToken, S3Sign.sign);
+
+  /**
+   * Force all connected clients to reload
+   */
+  app.post('/api/reload/:eventId', jwtAuth.checkToken, function(req, res) {
+    socket.send('reload', 'System', req.params.eventId);
+    res.sendStatus(200);
+  });
 });
 
 app.listen(80);

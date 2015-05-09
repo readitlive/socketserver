@@ -17,12 +17,12 @@ exports.checkAdmin = function(req, res, next) {
   db.Events.findById(req.params.eventId, function(err, event) {
     if (err) {
       console.log(err);
-      res.sendStatus(401).end();
+      res.sendStatus(401);
     }
     if (R.indexOf(req.user.username, event.adminUsers)) { //user is in admins list
       next()
     } else {
-      res.sendStatus(404);
+      res.sendStatus(401);
     }
   });
 
