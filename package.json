@@ -2,9 +2,9 @@
   "name": "ril-1",
   "version": "0.1.0",
   "description": "read it live main server",
-  "main": "socketserver.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node socketserver.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
