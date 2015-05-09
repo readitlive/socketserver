@@ -3,6 +3,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var R = require('ramda');
 
+var compress = require('compression');
+
 var socket = require('./socketserver');
 var db = require('./db/setup');
 var jwtAuth = require('./utils/jwtAuth');
@@ -18,23 +20,6 @@ var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 db.once('open', function() {
 
   app.use(bodyParser.json());
-  passport.use(new FacebookStrategy({
-    clientID: FACEBOOK_APP_ID,
-    clientSecret: FACEBOOK_APP_SECRET,
-    callbackURL: "http://readitlive.net/api/auth/facebook/callback"
-  }, function(accessToken, refreshToken, profile, done) {
-    db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
-      //TODO
-      user.profile.avatarUrl = profile.photos;
-      user.profile.name = profile.name;
-      user.profile.email = profile.email;
-      user.username = profile.email;
-      user.save(function(err, user) {
-        done();
-      });
-    });
-
-  }));
 
   app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -43,33 +28,30 @@ db.once('open', function() {
     next();
   });
 
+  app.use(compress());
   app.use(express.static(__dirname + '/public'));
-
-  // app.get('/:filename', function(req, res, next) {
-  //   var filename = req.params.filename;
-  //   if (!filename) filename = 'index.html';
-  //
-  //   var options = {
-  //     root: __dirname + '/public/',
-  //     dotfiles: 'deny',
-  //     headers: {
-  //       'x-timestamp': Date.now(),
-  //       'x-sent': true
-  //     }
-  //   };
-  //
-  //   res.sendStatusFile(filename, options, function(err) {
-  //     if (err) {
-  //       console.log(err);
-  //       res.sendStatus(err.status);
-  //     }
-  //   });
-  //
-  // });
 
   /**
    * Auth routes
    */
+
+  // passport.use(new FacebookStrategy({
+  //   clientID: FACEBOOK_APP_ID,
+  //   clientSecret: FACEBOOK_APP_SECRET,
+  //   callbackURL: "http://readitlive.net/api/auth/facebook/callback"
+  // }, function(accessToken, refreshToken, profile, done) {
+  //   db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
+  //     //TODO
+  //     user.profile.avatarUrl = profile.photos;
+  //     user.profile.name = profile.name;
+  //     user.profile.email = profile.email;
+  //     user.username = profile.email;
+  //     user.save(function() {
+  //       done();
+  //     });
+  //   });
+  //
+  // }));
 
   app.post('/api/auth/login', function(req, res) {
     db.Users.findOne({username: req.body.username}, function(err, user) {
@@ -360,4 +342,4 @@ db.once('open', function() {
   app.post('/api/sign', jwtAuth.checkToken, S3Sign.sign);
 });
 
-app.listen(3000);
+app.listen(80);

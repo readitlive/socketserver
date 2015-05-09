@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://readitlive:HR14Rules@proximus.modulusmongo.net:27017/Y8jyguwu');
+mongoose.connect('mongodb://readitlive:HR14Rules@c194.capital.3.mongolayer.com:10194/ril');
 var db = mongoose.connection;
 
 var R = require('ramda');
@@ -28,7 +28,7 @@ db.on('error', console.error);
 
 db.once('open', function() {
   oldUsers = mongoose.model('Users', usersSchema);
-  Users = mongoose.model('Users.v2', usersSchemav2);
+  Users = mongoose.model('UsersV2', usersSchemav2);
 
   oldUsers.find(function(err, users) {
     if (err) {

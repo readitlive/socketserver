@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://readitlive:HR14Rules@proximus.modulusmongo.net:27017/Y8jyguwu');
+mongoose.connect('mongodb://readitlive:HR14Rules@c194.capital.3.mongolayer.com:10194/ril');
 var db = mongoose.connection;
 
 var R = require('ramda');
@@ -37,9 +37,9 @@ db.on('error', console.error);
 
 db.once('open', function() {
   oldEvents = mongoose.model('Events', oldEventsSchema);
-  Events = mongoose.model('Events.v2', eventsSchema);
+  Events = mongoose.model('EventsV2', eventsSchema);
   oldPosts = mongoose.model('Posts', postsSchema);
-  Posts = mongoose.model('Posts.v2', postsSchema);
+  Posts = mongoose.model('PostsV2', postsSchema);
 
   oldEvents.find(function(err, events) {
     if (err) {

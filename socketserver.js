@@ -5,7 +5,9 @@ var R = require('ramda')
 var _clients = {};
 var _viewerCount = {};
 
-var echo = sockjs.createServer();
+var echo = sockjs.createServer({
+  jsessionid: true
+});
 echo.on('connection', function(conn) {
   conn.on('close', function() {
     var eventId = conn.eventId;
@@ -26,17 +28,16 @@ echo.on('connection', function(conn) {
       _viewerCount[eventId]++;
       updateViewerCount(eventId);
     }
-  })
+  });
 });
 
 var server = http.createServer();
 echo.installHandlers(server, {prefix: '/ws'});
 
-server.listen(3080, 'localhost');
+server.listen(3080);
 
 var updateViewerCount = function(eventId) {
-  console.log(_viewerCount)
-  exports.send('put', 'ViewerCount', eventId, {viewerCount: _viewerCount[eventId]})
+  exports.send('put', 'ViewerCount', eventId, {viewerCount: _viewerCount[eventId]});
 };
 
 exports.send = function(method, type, eventId, data) {
@@ -44,5 +45,5 @@ exports.send = function(method, type, eventId, data) {
   R.forEach(function(client) {
     //TODO: send some things only to admins
     client.write(JSON.stringify({method: method, type: type, data: data}));
-  }, R.values(_clients[eventId]))
+  }, R.values(_clients[eventId]));
 };

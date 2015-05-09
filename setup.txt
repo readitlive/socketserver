@@ -5,8 +5,40 @@ mongodump --host proximus.modulusmongo.net --db ab7yrinU --port 27017 --username
 restore to prod backup db:
 mongorestore --host proximus.modulusmongo.net --db Y8jyguwu --port 27017 --username readitlive --password HR14Rules dump/ab7yrinU
 
+restore to Compose mongo:
+mongorestore --host c194.capital.3.mongolayer.com --db ril --port 10194 --username readitlive --password HR14Rules dump/ab7yrinU
+
+mongo c194.capital.3.mongolayer.com:10194/ril -u readitlive -p HR14Rules
 
 remote shell:
 mongo proximus.modulusmongo.net:27017/Y8jyguwu -u readitlive -p HR14Rules
 
 kill collection: db.events.remove({})
+
+
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.1/install.sh | bash
+nvm install iojs
+apt-get update
+sudo apt-get install build-essential g++
+apt-get install make
+mkdir /www
+# copy files to prod:
+scp -r . root@104.236.225.58:/www
+
+
+
+mongodb:
+
+sudo apt-get install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow from 23456789
+sudo ufw enable
+
+
+mongo [ip]
+> use RIL
+> db.fake.save({fake: true});
+
+db.createUser({user: "readitlive", pwd: "HR14Rules", roles: [{role: "dbAdmin", db: "RIL"}]})
