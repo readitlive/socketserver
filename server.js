@@ -202,12 +202,12 @@ db.once('open', function() {
   });
 
   app.delete('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
-    db.Events.findOneAndRemove(req.params.eventId, function(err) {
+    db.Events.remove({_id: req.params.eventId}, function(err) {
       if (err) {
         console.log(err);
         res.sendStatus(500);
       } else {
-        console.log('deleted ', req.params);
+        console.log('deleted and removed', req.params);
         res.sendStatus(200);
       }
     });
