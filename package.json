@@ -1,7 +1,7 @@
 {
   "name": "ril-1",
   "version": "0.1.0",
-  "description": "",
+  "description": "read it live main server",
   "main": "socketserver.js",
   "scripts": {
     "start": "node socketserver.js",
