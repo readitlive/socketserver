@@ -4,15 +4,19 @@ var R = require('ramda')
 // http://truongtx.me/2014/06/07/simple-chat-application-using-sockjs/
 var _clients = {};
 var _viewerCount = {};
+var _clientEventMap = {};
 
 var echo = sockjs.createServer({
   jsessionid: true
 });
 echo.on('connection', function(conn) {
   conn.on('close', function() {
-    var eventId = conn.eventId;
-    delete _clients[conn.id];
+    var eventId = _clientEventMap[conn.id];
+    if (!eventId) {
+      console.log('no event for closed socket: ', conn.id, conn);
+    }
     _viewerCount[eventId]--;
+    delete _clients[conn.id];
     updateViewerCount(eventId);
     console.log('closed');
   });
@@ -20,9 +24,13 @@ echo.on('connection', function(conn) {
     message = JSON.parse(message);
     if (typeof message === 'object' && message.eventId) {
       var eventId = message.eventId;
+      if (!eventId) {
+        console.log('no event for socket: ', conn.id, conn);
+      }
       !_clients[eventId] && (_clients[eventId] = {});
-      conn.eventId = eventId;
       _clients[eventId][conn.id] = conn;
+      _clientEventMap[conn.id] = eventId;
+      console.log('client Id: ', conn.id, 'event: ', _clientEventMap[conn.id]);
 
       if (!_viewerCount[eventId]) _viewerCount[eventId] = 0;
       _viewerCount[eventId]++;
