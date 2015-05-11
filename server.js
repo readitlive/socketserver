@@ -61,12 +61,12 @@ db.once('open', function() {
         return res.sendStatus(401);
       } else if (!user) {
         console.log('no user found:', req.body);
-        return res.sendStatus(401);
+        return res.status(401).json({message: 'User does not exist.'});
       }
 
       if (!localAuth.validatePassword(user, req.body.password)) {
         console.log('credentials invalid:', req.body);
-        return res.sendStatus(401);
+        return res.status(401).json({message: 'Wrong password.'});
       } else {
         return res.json(jwtAuth.encodeToken(user));
       }
@@ -101,27 +101,32 @@ db.once('open', function() {
     if (!(req.body.username && req.body.password)) {
       return res.sendStatus(400);
     }
-
-    var newUser = new db.Users({
-      username: req.body.username,
-      passwordHash: localAuth.genHash(req.body.password),
-      profile: {
-        email: req.body.email,
-        name: req.body.name,
+    db.Users.findOne({username: req.body.username}, function(err, user) {
+      if (user) {
+        return res.status(400).json({message: 'User already exists.'});
       }
+      var newUser = new db.Users({
+        username: req.body.username,
+        passwordHash: localAuth.genHash(req.body.password),
+        profile: {
+          email: req.body.email,
+          name: req.body.name,
+        }
+      });
+
+      newUser.save(function(err, user) {
+        if (err) {
+          console.log('err saving user: ', req.body);
+          return res.sendStatus(500);
+        } else if (!user) {
+          console.log('err no user: ', req.body);
+          return res.sendStatus(500);
+        }
+        console.log('saved user: ', user);
+        return res.json(jwtAuth.encodeToken(newUser));
+      });
     });
 
-    newUser.save(function(err, user) {
-      if (err) {
-        console.log('err saving user: ', req.body);
-        return res.sendStatus(500);
-      } else if (!user) {
-        console.log('err no user: ', req.body);
-        return res.sendStatus(500);
-      }
-      console.log('saved user: ', user);
-      return res.json(jwtAuth.encodeToken(newUser));
-    });
   });
 
   app.get('/api/auth/facebook', passport.authenticate('facebook', { session: false }));
@@ -147,7 +152,7 @@ db.once('open', function() {
       eventIsLive: false,
       createdBy: req.user.username,
       adminUsers: [req.user.username, 'CPelkey', 'maddog', 'rg'],
-      time: Date.now()
+      time: Date.now().valueOf()
     });
 
     event.save(function(err, event) {
@@ -219,6 +224,7 @@ db.once('open', function() {
 
   app.post('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     var entry = new db.Posts(req.body);
+    entry.time = Date.now().valueOf();
     entry.save(function(err) {
       if (err) {
         console.log(err);
@@ -292,6 +298,7 @@ db.once('open', function() {
 
   app.post('/api/event/:eventId/comment', jwtAuth.checkToken, function(req, res) {
     var comment = new db.Comments(req.body);
+    comment.time = Date.now().valueOf();
     comment.save(function(err) {
       if (err) {
         console.log(err);
