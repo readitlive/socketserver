@@ -10,6 +10,7 @@ var db = require('./db/setup');
 var jwtAuth = require('./utils/jwtAuth');
 var localAuth = require('./utils/localAuth');
 var S3Sign = require('./utils/S3Sign');
+var utils = require('./utils/utils');
 
 var passport = require('passport');
 // var FacebookStrategy = require('passport-facebook').Strategy;
@@ -103,7 +104,7 @@ db.once('open', function() {
     }
     db.Users.findOne({username: req.body.username}, function(err, user) {
       if (user) {
-        return res.status(400).json({message: 'User already exists.'});
+        return res.status(400).json({message: 'Sorry, that username is taken.'});
       }
       var newUser = new db.Users({
         username: req.body.username,
@@ -225,6 +226,7 @@ db.once('open', function() {
   app.post('/api/event/:eventId', jwtAuth.checkToken, localAuth.checkAdmin, function(req, res) {
     var entry = new db.Posts(req.body);
     entry.time = Date.now().valueOf();
+    entry.timeEU = utils.getTimeEU();
     entry.save(function(err) {
       if (err) {
         console.log(err);
@@ -245,8 +247,7 @@ db.once('open', function() {
        console.log(err);
        res.sendStatus(400);
      } else if (entries) {
-       var sortedEntries = R.sortBy(R.prop('time'), entries);
-       res.json(sortedEntries);
+       res.json(entries);
      } else {
        res.json({});
      }
@@ -299,6 +300,7 @@ db.once('open', function() {
   app.post('/api/event/:eventId/comment', jwtAuth.checkToken, function(req, res) {
     var comment = new db.Comments(req.body);
     comment.time = Date.now().valueOf();
+    comment.timeEU = utils.getTimeEU();
     comment.save(function(err) {
       if (err) {
         console.log(err);
