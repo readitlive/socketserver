@@ -55,7 +55,8 @@ db.once('open', function() {
   // }));
 
   app.post('/api/auth/login', function(req, res) {
-    db.Users.findOne({username: req.body.username}, function(err, user) {
+    if (!req.body.username) return res.sendStatus(401);
+    db.Users.findOne({usernameLowercase: req.body.username.toLowerCase()}, function(err, user) {
       if (err) {
         console.log(err);
         console.log('error locating user:', req.body);
@@ -102,7 +103,7 @@ db.once('open', function() {
     if (!(req.body.username && req.body.password)) {
       return res.sendStatus(400);
     }
-    db.Users.findOne({username: req.body.username}, function(err, user) {
+    db.Users.findOne({usernameLowercase: req.body.username.toLowerCase()}, function(err, user) {
       if (user) {
         return res.status(400).json({message: 'Sorry, that username is taken.'});
       }

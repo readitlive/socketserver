@@ -34,6 +34,7 @@ exports.commentsSchema.index({eventId: 1});
 exports.usersSchema = new mongoose.Schema({
   facebookId: String,
   username: String,
+  usernameLowercase: String,
   passwordHash: String,
   profile: {
     name: String,

@@ -13,11 +13,12 @@ echo.on('connection', function(conn) {
   conn.on('close', function() {
     var eventId = _clientEventMap[conn.id];
     if (!eventId) {
-      console.log('no event for closed socket: ', conn.id, conn);
+      console.log('no event for closed socket: ', conn.id, 'ip: ', conn.remoteAddress);
+    } else {
+      _viewerCount[eventId]--;
+      delete _clients[conn.id];
+      updateViewerCount(eventId);
     }
-    _viewerCount[eventId]--;
-    delete _clients[conn.id];
-    updateViewerCount(eventId);
     console.log('closed');
   });
   conn.on('data', function(message) {
