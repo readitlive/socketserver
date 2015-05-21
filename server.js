@@ -13,10 +13,10 @@ var S3Sign = require('./utils/S3Sign');
 var utils = require('./utils/utils');
 
 var passport = require('passport');
-// var FacebookStrategy = require('passport-facebook').Strategy;
-//
-// var FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
-// var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+var FacebookStrategy = require('passport-facebook').Strategy;
+
+var FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+var FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
 db.once('open', function() {
 
@@ -35,24 +35,26 @@ db.once('open', function() {
   /**
    * Auth routes
    */
+  passport.use(new FacebookStrategy({
+    clientID: FACEBOOK_APP_ID,
+    clientSecret: FACEBOOK_APP_SECRET,
+    callbackURL: "http://readitlive.net/api/auth/facebook/callback"
+  }, function(accessToken, refreshToken, profile, done) {
+    db.Users.findOne({facebookId: profile.id}, function(err, user) {
+      console.log(profile);
+      if (err) done(401);
+      if (!user) user = new db.Users();
+      user.facebookId = profile.id;
+      user.username = profile.displayName;
+      user.profile.name = profile.displayName;
+      user.profile.email = profile.emails[0] && profile.emails[0].value;
+      user.profile.avatarUrl = profile.photos;
+      user.save(function(err) {
+        done(err, user);
+      });
+    });
 
-  // passport.use(new FacebookStrategy({
-  //   clientID: FACEBOOK_APP_ID,
-  //   clientSecret: FACEBOOK_APP_SECRET,
-  //   callbackURL: "http://readitlive.net/api/auth/facebook/callback"
-  // }, function(accessToken, refreshToken, profile, done) {
-  //   db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
-  //     //TODO
-  //     user.profile.avatarUrl = profile.photos;
-  //     user.profile.name = profile.name;
-  //     user.profile.email = profile.email;
-  //     user.username = profile.email;
-  //     user.save(function() {
-  //       done();
-  //     });
-  //   });
-  //
-  // }));
+  }));
 
   app.post('/api/auth/login', function(req, res) {
     if (!req.body.username) return res.sendStatus(401);
@@ -128,20 +130,11 @@ db.once('open', function() {
         return res.json(jwtAuth.encodeToken(newUser));
       });
     });
-
   });
 
   app.get('/api/auth/facebook', passport.authenticate('facebook', { session: false }));
   app.get('/api/auth/facebook/callback', passport.authenticate('facebook', { session: false }), function(req, res) {
-    // db.Users.findOrCreate({facebookId: profile.id}, function(err, user) {
-    //   //TODO
-    //   user.profile.avatarUrl = profile.photos;
-    //   user.profile.name = profile.name;
-    //   user.profile.email = profile.email;
-    //   user.username = profile.email;
-    //   user.save();
-    //   res.json(jwtAuth.encodeToken(user));
-    // });
+    res.json(jwtAuth.encodeToken(req.user));
   });
 
   /**
@@ -347,7 +340,6 @@ db.once('open', function() {
   /**
    * S3 Image Upload
    */
-
   app.post('/api/sign', jwtAuth.checkToken, S3Sign.sign);
 
   /**
